@@ -1,25 +1,67 @@
-import React from 'react';
-import logo from './logo.svg';
+import React,{ useEffect, useContext } from 'react';
 import './App.css';
+import Header from './Components/Header';
+import Home from './Components/Home';
+import { BrowserRouter as Router, Route, Switch} from 'react-router-dom'
+import Checkout from './Components/Checkout';
+import Login from './Components/Login';
+import { auth } from './firebase'
+import { stateContext } from './Components/Context'
+import Payment from './Components/Payment';
+import { Elements } from '@stripe/react-stripe-js'
+import { loadStripe } from '@stripe/stripe-js'
+import Orders from './Components/Orders'
+
+
+const promise = loadStripe('pk_test_51HgwewKaMEhVDFsouPIl9fwT2AIw8B8EsClTDDlUgQBjhESiTtdtkqfpxHgpQzsmjKvzYpyN9uoFBJYEwVso5HOr00w5qydyAx')
 
 function App() {
+  const [state, dispatch] = useContext(stateContext)
+
+  useEffect(() => {
+    auth.onAuthStateChanged(user => {
+      if(user) {
+        dispatch({
+          type: 'SET_USER',
+          item: user
+        })
+      }
+      else {
+        dispatch({
+          type: 'SET_USER',
+          item: null
+        })
+      }
+    })
+  },[])
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <Router>
+      <div className="App">
+        <Switch>
+          <Route exact path='/login'>
+            <Login />
+          </Route>
+          <Route exact path='/'>
+            <Header />
+            <Home />
+          </Route>
+          <Route  path='/checkout'>
+            <Header />
+            <Checkout />
+          </Route>
+          <Route  path='/payment'>
+            <Header />
+            <Elements stripe={promise}>
+              <Payment />
+            </Elements>
+          </Route>
+          <Route exact path='/orders'>
+            <Header />
+            <Orders />
+          </Route>
+        </Switch>
+      </div>
+    </Router>
   );
 }
 
